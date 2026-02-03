@@ -1,0 +1,9 @@
+- name: Setup SSH keys
+  hosts: all
+  become: yes
+  tasks:
+    - name: Add host SSH public key to vagrant user
+      ansible.posix.authorized_key:
+        user: vagrant
+        state: present
+        key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
