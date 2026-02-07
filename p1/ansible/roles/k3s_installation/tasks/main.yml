@@ -26,7 +26,8 @@
     module: copy
     content: "{{ server_token.stdout }}"
     dest: "/tmp/k3s_token.txt"
-  become: no
+    mode: "700"
+  become: yes
   when: k3s_is_server
 
 - name: Read token from local file
