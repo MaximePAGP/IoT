@@ -7,7 +7,6 @@
   apt:
     update_cache: yes
     name:
-      - vim
       - htop
       - git
       - net-tools

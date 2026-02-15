@@ -27,12 +27,13 @@
     content: "{{ server_token.stdout }}"
     dest: "/tmp/k3s_token.txt"
     mode: "700"
-  become: yes
+  become: false
   when: k3s_is_server
 
 - name: Read token from local file
   set_fact:
     k3s_token: "{{ lookup('file', '/tmp/k3s_token.txt') | trim }}"
+  become: yes
   when: not k3s_is_server
 
 - name: Install K3s agent
