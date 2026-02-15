@@ -1,0 +1,20 @@
+- name: "Update apt"
+  become: yes
+  apt:
+    update_cache: yes
+
+- name: "Install common dependencies"
+  apt:
+    update_cache: yes
+    name:
+      - htop
+      - git
+      - net-tools
+      - curl
+    state: present
+
+- name: "Clean cache"
+  become: yes
+  apt:
+    autoclean: yes
+    autoremove: yes
