@@ -26,19 +26,19 @@
     module: copy
     content: "{{ server_token.stdout }}"
     dest: "/tmp/k3s_token.txt"
-    mode: "700"
+    mode: "0700"
   become: false
   when: k3s_is_server
 
 - name: Read token from local file
   set_fact:
     k3s_token: "{{ lookup('file', '/tmp/k3s_token.txt') | trim }}"
-  become: yes
   when: not k3s_is_server
 
 - name: Install K3s agent
   shell: |
     curl -sfL https://get.k3s.io | \
     K3S_URL={{ k3s_server_url }} \
-    K3S_TOKEN={{ k3s_token }} sh -
+    K3S_TOKEN={{ k3s_token }} \
+    sh -s - --node-ip={{ ansible_host }}
   when: not k3s_is_server
