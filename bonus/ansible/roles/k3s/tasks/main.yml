@@ -1,0 +1,78 @@
+- name: Install K3s server
+  shell: >
+    curl -sfL https://get.k3s.io |
+    sh -s - server
+    --node-ip=192.168.56.110
+    --advertise-address=192.168.56.110
+    --tls-san=192.168.56.110
+  when: k3s_is_server
+  args:
+    creates: /usr/local/bin/k3s
+
+- name: Wait for K3s API
+  wait_for:
+    host: 127.0.0.1
+    port: 6443
+    timeout: 120
+  when: k3s_is_server
+
+- name: Wait for token file
+  wait_for:
+    path: /var/lib/rancher/k3s/server/node-token
+    state: present
+    timeout: 120
+  when: k3s_is_server
+
+- name: Read token from server
+  command: cat /var/lib/rancher/k3s/server/node-token
+  register: server_token
+  changed_when: false
+  when: k3s_is_server
+
+- name: Save token to local file
+  delegate_to: localhost
+  copy:
+    content: "{{ server_token.stdout }}"
+    dest: "/tmp/k3s_token.txt"
+    mode: "0600"
+  when: k3s_is_server
+
+
+- name: Copy manifests to server
+  copy:
+    src: "{{ item }}"
+    dest: "/tmp/{{ item }}"
+    mode: "0644"
+  loop:
+    - app1.yml
+    - app2.yml
+    - app3.yml
+    - ingress.yml
+  when: k3s_is_server
+
+- name: Apply manifests on server
+  command: kubectl apply -f /tmp/{{ item }}
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  loop:
+    - app1.yml
+    - app2.yml
+    - app3.yml
+    - ingress.yml
+  when: k3s_is_server
+
+
+- name: Read token from local file
+  set_fact:
+    k3s_token: "{{ lookup('file', '/tmp/k3s_token.txt') | trim }}"
+  when: not k3s_is_server
+
+- name: Install K3s agent
+  shell: >
+    curl -sfL https://get.k3s.io |
+    K3S_URL={{ k3s_server_url }}
+    K3S_TOKEN={{ k3s_token }}
+    sh -s - --node-ip={{ ansible_host }}
+  args:
+    creates: /usr/local/bin/k3s
+  when: not k3s_is_server

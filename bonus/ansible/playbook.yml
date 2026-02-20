@@ -15,8 +15,8 @@
     - common
 
 
-- name: Install K3s
+- name: Install K3s & configure cluster
   hosts: all
   become: yes
   roles:
-    - k3s_installation
+    - k3s
