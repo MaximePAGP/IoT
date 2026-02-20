@@ -9,7 +9,9 @@ Vagrant.configure("2") do |config|
   
     NODES = [
      { :hostname => "magrondiS", :ip => "192.168.56.110", :cpu => 1, :memory => 2048, :box => "hashicorp/bionic64", },
-     { :hostname => "magrondiSW", :ip => "192.168.56.111", :cpu => 1, :memory => 2048, :box => "hashicorp/bionic64", }
+     { :hostname => "magrondiSW1", :ip => "192.168.56.111", :cpu => 1, :memory => 2048, :box => "hashicorp/bionic64", },
+     { :hostname => "magrondiSW2", :ip => "192.168.56.112", :cpu => 1, :memory => 2048, :box => "hashicorp/bionic64", },
+     { :hostname => "magrondiSW3", :ip => "192.168.56.113", :cpu => 1, :memory => 2048, :box => "hashicorp/bionic64", }
     ]
 
     NODES.each do |node|
