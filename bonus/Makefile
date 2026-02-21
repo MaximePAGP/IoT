@@ -1,6 +1,9 @@
 up:
 	vagrant up
 
+ansible:
+	ansible-playbook -i ./ansible/inventory.ini ./ansible/playbook.yml
+
 re:
 	make fclean
 	make up
@@ -15,4 +18,4 @@ fclean:
 	vagrant destroy -f
 
 
-.PHONY: up re stop reload fcleean
+.PHONY: up re stop reload fcleean ansible

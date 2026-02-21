@@ -1,5 +1,7 @@
 - name: Setup SSH keys
-  hosts: all
+  hosts:
+    - server
+    - serverWorker
   become: yes
   tasks:
     - name: Add host SSH public key to vagrant user
@@ -9,14 +11,24 @@
         key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
 
 - name: Install common dependencies
-  hosts: all
+  hosts:
+  - server
+  - serverWorker
   become: yes
   roles:
     - common
 
 
 - name: Install K3s & configure cluster
-  hosts: all
+  hosts:
+    - server
+    - serverWorker
   become: yes
   roles:
     - k3s
+
+- name: Setup host entries
+  hosts: localhost
+  become: yes
+  roles:
+    - hosts
