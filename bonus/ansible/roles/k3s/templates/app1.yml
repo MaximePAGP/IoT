@@ -1,4 +1,4 @@
-apiVersion: apps1/v1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: app1
@@ -14,6 +14,20 @@ spec:
     spec:
       containers:
       - name: app1
-        image: nginx
+        image: paulbouwer/hello-kubernetes:1.10.1
         ports:
         - containerPort: 80
+        env:
+        - name: MESSAGE
+          value: "Hello Kubernetes"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app1-service
+spec:
+  selector:
+    app: app1
+  ports:
+    - port: 80
+      targetPort: 8080
