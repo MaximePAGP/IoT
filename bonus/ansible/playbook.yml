@@ -1,13 +1,13 @@
-- name: Setup SSH keys
-  hosts:
-    - cluser
-  become: yes
-  tasks:
-    - name: Add host SSH public key to vagrant user
-      ansible.posix.authorized_key:
-        user: vagrant
-        state: present
-        key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+# - name: Setup SSH keys
+#   hosts:
+#     - cluser
+#   become: yes
+#   tasks:
+#     - name: Add host SSH public key to vagrant user
+#       ansible.posix.authorized_key:
+#         user: vagrant
+#         state: present
+#         key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
 
 - name: Install common dependencies
   hosts:
@@ -23,6 +23,13 @@
   become: yes
   roles:
     - docker_installation
+
+- name: Install Kubectl
+  hosts:
+  - cluser
+  become: yes
+  roles:
+    - kubectl
 
 
 - name: Install K3D & configure cluster

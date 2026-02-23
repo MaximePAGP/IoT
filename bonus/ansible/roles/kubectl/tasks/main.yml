@@ -1,0 +1,26 @@
+- name: Download kubectl binary
+  ansible.builtin.shell: >
+    curl -LO "https://dl.k8s.io/release/{{ kubectl_version }}/bin/{{ kubectl_os }}/{{ kubectl_arch }}/kubectl"
+  args:
+    chdir: /tmp
+
+- name: Download kubectl checksum
+  ansible.builtin.shell: >
+    curl -LO "https://dl.k8s.io/release/{{ kubectl_version }}/bin/{{ kubectl_os }}/{{ kubectl_arch }}/kubectl.sha256"
+  args:
+    chdir: /tmp
+- name: Compare checksum
+  ansible.builtin.shell: >
+    echo "$(cat kubectl.sha256)  kubectl" | sha256sum --check
+
+- name: Install kubectl
+  ansible.builtin.shell: >
+    sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+
+- name: Check kubectl CLI 
+  ansible.builtin.shell: >
+    kubectl version --client
+
+- name: Delete Binaries
+  ansible.builtin.shell: >
+    rm -rf kubectl kubectl.sha256
