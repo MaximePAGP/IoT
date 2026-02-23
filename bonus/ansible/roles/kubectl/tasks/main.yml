@@ -1,14 +1,11 @@
 - name: Download kubectl binary
   ansible.builtin.shell: >
     curl -LO "https://dl.k8s.io/release/{{ kubectl_version }}/bin/{{ kubectl_os }}/{{ kubectl_arch }}/kubectl"
-  args:
-    chdir: /tmp
 
 - name: Download kubectl checksum
   ansible.builtin.shell: >
     curl -LO "https://dl.k8s.io/release/{{ kubectl_version }}/bin/{{ kubectl_os }}/{{ kubectl_arch }}/kubectl.sha256"
-  args:
-    chdir: /tmp
+
 - name: Compare checksum
   ansible.builtin.shell: >
     echo "$(cat kubectl.sha256)  kubectl" | sha256sum --check

@@ -1,3 +1,4 @@
 k3s_is_server: false
 k3s_server_url: ""
 k3d_cluser_name: "p3"
+argocd_admin_password: "123"

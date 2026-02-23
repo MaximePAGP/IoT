@@ -4,62 +4,67 @@
 
 - name: Create K3D cluser {{ k3d_cluser_name }}
   shell: >
-    k3d cluster create {{ k3d_cluser_name }}
-# - name: Wait for token file
-#   wait_for:
-#     path: /var/lib/rancher/k3s/server/node-token
-#     state: present
-#     timeout: 60
-#   when: k3s_is_server
+    k3d cluster create {{ k3d_cluser_name }} -c ./roles/k3d/templates/k3d-default.yml
 
+- name: Create dev namespace
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: Namespace
+    name: dev
+    state: present
+  become: true
 
-# - name: Read token from server
-#   command: cat /var/lib/rancher/k3s/server/node-token
-#   register: server_token
-#   become: true
-#   when: k3s_is_server
+- name: Create Argocd namespace
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: Namespace
+    name: argocd
+    state: present
+  become: true
 
-# - name: Save token to local file
-#   local_action:
-#     module: copy
-#     content: "{{ server_token.stdout }}"
-#     dest: "/tmp/k3s_token.txt"
-#     mode: "0700"
-#   become: false
-#   when: k3s_is_server
+- name: Install Argocd
+  ansible.builtin.shell: >
+    kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+  become: true
 
+- name: Wait for Argocd server to be ready
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Pod
+    namespace: argocd
+    label_selectors:
+      - app.kubernetes.io/name=argocd-server
+    wait: yes
+    wait_condition:
+      type: Ready
+      status: "True"
+    wait_timeout: 300
+  become: true
 
-# - name: Copy manifests to server
-#   template:
-#     src: "{{ item }}"
-#     dest: "/tmp/{{ item }}"
-#     mode: "0644"
-#   loop:
-#     - app1.yml
-#     - app2.yml
-#     - app3.yml
-#     - ingress.yml
-#   when: k3s_is_server
+- name: Install bcrypt
+  ansible.builtin.pip:
+    name: bcrypt
+    state: present
+  become: true
 
-# - name: Apply manifests on server
-#   command: kubectl apply -f /tmp/{{ item }}
-#   loop:
-#     - app1.yml
-#     - app2.yml
-#     - app3.yml
-#     - ingress.yml
-#   when: k3s_is_server
+- name: Hash password
+  ansible.builtin.shell: >
+    python3 -c "import bcrypt; print(bcrypt.hashpw(b'{{ argocd_admin_password }}', bcrypt.gensalt()).decode())"
+  register: password_hash
+  become: true
+  no_log: true
 
+- name: Update ArgoCD password
+  ansible.builtin.shell: >
+    kubectl -n argocd patch secret argocd-secret \
+      -p '{"stringData": {"admin.password": "{{ password_hash.stdout }}", "admin.passwordMtime": "'$(date +%FT%T%Z)'"}}'
+  become: true
+  no_log: true
 
-# - name: Read token from local file
-#   set_fact:
-#     k3s_token: "{{ lookup('file', '/tmp/k3s_token.txt') | trim }}"
-#   when: not k3s_is_server
+- name: Start ArgoCD port-forward
+  ansible.builtin.shell: >
+    kubectl port-forward svc/argocd-server -n argocd 8080:443 > /dev/null 2>&1 &
+  become: true
+  async: 0
+  poll: 0
 
-# - name: Install K3s agent
-#   shell: >
-#     curl -sfL https://get.k3s.io |
-#     K3S_URL={{ k3s_server_url }}
-#     K3S_TOKEN={{ k3s_token }}
-#     sh -s - --node-ip={{ ansible_host }}
-#   when: not k3s_is_server
