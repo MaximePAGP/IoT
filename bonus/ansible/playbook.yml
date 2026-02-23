@@ -1,7 +1,6 @@
 - name: Setup SSH keys
   hosts:
-    - server
-    - serverWorker
+    - cluser
   become: yes
   tasks:
     - name: Add host SSH public key to vagrant user
@@ -12,23 +11,24 @@
 
 - name: Install common dependencies
   hosts:
-  - server
-  - serverWorker
+  - cluser
   become: yes
   roles:
     - common
 
 
-- name: Install K3s & configure cluster
+- name: Install Docker
   hosts:
-    - server
-    - serverWorker
+  - cluser
   become: yes
   roles:
-    - k3s
+    - docker_installation
 
-- name: Setup host entries
-  hosts: localhost
+
+- name: Install K3D & configure cluster
+  hosts:
+  - cluser
   become: yes
   roles:
-    - hosts
+    - k3d
+

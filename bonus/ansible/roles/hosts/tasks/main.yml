@@ -1,7 +1,0 @@
-- name: Add apps domains to /etc/hosts
-  become: yes
-  lineinfile:
-    path: /etc/hosts
-    line: "192.168.56.110 app1.com app2.com"
-    state: present
-    create: yes

@@ -1,0 +1,9 @@
+- name: Run Docker
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Restart Docker
+  shell: systemctl restart docker
+  become: true
