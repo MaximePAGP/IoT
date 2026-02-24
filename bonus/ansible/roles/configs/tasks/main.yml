@@ -1,6 +1,6 @@
 
 - name: Create K3D cluser {{ k3d_cluser_name }}
-  shell: >
+  ansible.builtin.shell: >
     k3d cluster create {{ k3d_cluser_name }} -c ./roles/configs/templates/k3d-default.yml
 
 - name: Create dev namespace
@@ -10,6 +10,15 @@
     name: dev
     state: present
   become: true
+
+- name: Create gitlab namespace
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: Namespace
+    name: gitlab
+    state: present
+  become: true
+
 
 - name: Create Argocd namespace
   kubernetes.core.k8s:
@@ -70,3 +79,10 @@
   ansible.builtin.shell: >
     kubectl apply -f ./roles/configs/templates/argocd_deployement.yml
   become: true
+
+- name: Install helm repo
+  ansible.builtin.shell: |
+    helm repo add gitlab https://charts.gitlab.io/ 
+    helm repo update 
+    helm search repo gitlab
+    helm install gitlab gitlab/gitlab --namespace gitlab --create-namespace 

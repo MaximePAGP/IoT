@@ -32,12 +32,21 @@
     - kubectl
 
 
-- name: Install K3D & configure cluster
+- name: Install K3D
   hosts:
   - cluster
   become: yes
   roles:
     - k3d
+
+  
+- name: Install Helm
+  hosts:
+  - cluster
+  become: yes
+  roles:
+    - helm
+
 
 - name: Configure cluster
   hosts:
