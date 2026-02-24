@@ -68,3 +68,8 @@
   async: 0
   poll: 0
 
+
+- name: Apply Argocd k3d Application.yml
+  ansible.builtin.shell: >
+    kubectl apply -f ./roles/k3d/templates/argocd_deployement.yml
+  become: true
