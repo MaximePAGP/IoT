@@ -39,3 +39,10 @@
   roles:
     - k3d
 
+- name: Configure cluster
+  hosts:
+  - cluster
+  become: yes
+  roles:
+    - configs
+
