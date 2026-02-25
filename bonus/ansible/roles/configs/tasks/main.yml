@@ -80,9 +80,6 @@
     kubectl apply -f ./roles/configs/templates/argocd_deployement.yml
   become: true
 
-- name: Install helm repo
+- name: Apply Gitlab k3d Application.yml
   ansible.builtin.shell: |
-    helm repo add gitlab https://charts.gitlab.io/ 
-    helm repo update 
-    helm search repo gitlab
-    helm install gitlab gitlab/gitlab --namespace gitlab --create-namespace 
+    kubectl apply -f ./roles/configs/templates/gitlab_deployement.yml

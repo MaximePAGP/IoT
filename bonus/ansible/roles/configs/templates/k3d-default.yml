@@ -8,3 +8,6 @@ ports:
   - port: 8888:8888
     nodeFilters:
       - loadbalancer
+  - port: 30081:30081
+    nodeFilters:
+      - loadbalancer
