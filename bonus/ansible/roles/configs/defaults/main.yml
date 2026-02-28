@@ -1,2 +1,2 @@
-k3d_cluser_name: "p3"
+k3d_cluster_name: "p3"
 argocd_admin_password: "123"

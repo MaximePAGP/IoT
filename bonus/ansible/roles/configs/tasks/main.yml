@@ -1,51 +1,29 @@
+---
+- name: Delete existing K3D cluster if exists
+  ansible.builtin.shell: k3d cluster delete {{ k3d_cluster_name }}
+  ignore_errors: true
 
-- name: Create K3D cluser {{ k3d_cluser_name }}
-  ansible.builtin.shell: >
-    k3d cluster create {{ k3d_cluser_name }} -c ./roles/configs/templates/k3d-default.yml
+- name: Create K3D cluster {{ k3d_cluster_name }}
+  ansible.builtin.shell: k3d cluster create {{ k3d_cluster_name }} -c roles/configs/templates/cluster.yml
 
-- name: Create dev namespace
-  kubernetes.core.k8s:
-    api_version: v1
-    kind: Namespace
-    name: dev
-    state: present
-  become: true
+- name: Wait for nodes to be ready
+  ansible.builtin.shell: kubectl wait --for=condition=Ready nodes --all --timeout=120s
 
-- name: Create gitlab namespace
-  kubernetes.core.k8s:
-    api_version: v1
-    kind: Namespace
-    name: gitlab
-    state: present
-  become: true
+- name: Create namespaces
+  ansible.builtin.shell: kubectl create namespace {{ item }}
+  loop:
+    - dev
+    - argocd
+
+- name: Install ArgoCD
+  ansible.builtin.shell: kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+- name: Wait for ArgoCD server to be ready
+  ansible.builtin.shell: kubectl wait --for=condition=Ready pod -l app.kubernetes.io/name=argocd-server -n argocd --timeout=300s
 
 
-- name: Create Argocd namespace
-  kubernetes.core.k8s:
-    api_version: v1
-    kind: Namespace
-    name: argocd
-    state: present
-  become: true
-
-- name: Install Argocd
-  ansible.builtin.shell: >
-    kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-  become: true
-
-- name: Wait for Argocd server to be ready
-  kubernetes.core.k8s_info:
-    api_version: v1
-    kind: Pod
-    namespace: argocd
-    label_selectors:
-      - app.kubernetes.io/name=argocd-server
-    wait: yes
-    wait_condition:
-      type: Ready
-      status: "True"
-    wait_timeout: 300
-  become: true
+- name: Expose ArgoCD via NodePort
+  ansible.builtin.shell: kubectl apply -f roles/configs/templates/argocd_config.yml
 
 - name: Install bcrypt
   ansible.builtin.pip:
@@ -53,33 +31,14 @@
     state: present
   become: true
 
-- name: Hash password
+- name: Hash ArgoCD password
   ansible.builtin.shell: >
     python3 -c "import bcrypt; print(bcrypt.hashpw(b'{{ argocd_admin_password }}', bcrypt.gensalt()).decode())"
   register: password_hash
-  become: true
   no_log: true
 
 - name: Update ArgoCD password
   ansible.builtin.shell: >
     kubectl -n argocd patch secret argocd-secret \
       -p '{"stringData": {"admin.password": "{{ password_hash.stdout }}", "admin.passwordMtime": "'$(date +%FT%T%Z)'"}}'
-  become: true
   no_log: true
-
-- name: Start ArgoCD port-forward
-  ansible.builtin.shell: >
-    kubectl port-forward svc/argocd-server -n argocd 8080:443 > /dev/null 2>&1 &
-  become: true
-  async: 0
-  poll: 0
-
-
-- name: Apply Argocd k3d Application.yml
-  ansible.builtin.shell: >
-    kubectl apply -f ./roles/configs/templates/argocd_deployement.yml
-  become: true
-
-- name: Apply Gitlab k3d Application.yml
-  ansible.builtin.shell: |
-    kubectl apply -f ./roles/configs/templates/gitlab_deployement.yml
