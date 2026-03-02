@@ -3,11 +3,12 @@ kind: Simple
 metadata:
   name: p3
 servers: 1
+agents: 1
 image: docker.io/rancher/k3s:v1.31.5-k3s1
 ports:
-  - port: 8888:8888
+  - port: 8080:{{ argocd_pod_port}}
     nodeFilters:
       - loadbalancer
-  - port: 30081:30081
+  - port: 30081:{{ gitlab_pod_port}}
     nodeFilters:
       - loadbalancer

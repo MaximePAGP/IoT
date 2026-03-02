@@ -1,2 +1,6 @@
 k3d_cluster_name: "p3"
 argocd_admin_password: "123"
+argocd_pod_port: 30082
+
+gitlab_pod_port: 30081
+gitlab_root_password: "123"
