@@ -1,18 +1,16 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: gitlab-nodeport
-  namespace: gitlab
+  name: gitea-nodeport
+  namespace: gitea
 spec:
   type: NodePort
   selector:
-    app: webservice
-    release: gitlab
+    app.kubernetes.io/name: gitea
   ports:
-    - port: 8080
-      targetPort: 8080
-      nodePort: {{ gitlab_pod_port }}
-
+    - port: 3000
+      targetPort: 3000
+      nodePort: {{ gitea_node_port }}
 ---
 apiVersion: v1
 kind: Service
@@ -26,8 +24,7 @@ spec:
   ports:
     - port: 443
       targetPort: 8080
-      nodePort: {{ argocd_pod_port }} 
-
+      nodePort: {{ argocd_node_port }}
 ---
 apiVersion: v1
 kind: Service
