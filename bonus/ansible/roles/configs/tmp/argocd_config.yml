@@ -1,12 +1,12 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: argocd
+  name: wil-app
   namespace: argocd
 spec:
   project: default
   source:
-    repoURL: 'http://gitlab-webservice-default.gitlab.svc.cluster.local/root/will-app.git'
+    repoURL: 'http://gitea-http.gitea.svc.cluster.local:3000/admin/wil-app.git'
     targetRevision: main
     path: .
   destination:

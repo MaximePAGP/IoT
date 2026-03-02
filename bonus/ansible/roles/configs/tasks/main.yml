@@ -5,7 +5,7 @@
   loop:
     - { src: "services.yml.j2", dest: "services.yml" }
     - { src: "cluster.yml.j2", dest: "cluster.yml" }
-    - { src: "argocd_config.yml", dest: "argocd_config.yml" }
+    - { src: "argocd_config.yml.j2", dest: "argocd_config.yml" }
 
 - name: Delete old cluster
   ansible.builtin.shell: k3d cluster delete {{ k3d_cluster_name }} || true
@@ -23,39 +23,68 @@
     - gitlab
     - dev
 
-- name: Create GitLab root password secret
+- name: Add gitea helm repo
   ansible.builtin.shell: |
-    kubectl -n gitlab delete secret gitlab-root-password || true
-    kubectl -n gitlab create secret generic gitlab-root-password \
-      --from-literal=password={{ gitlab_root_password }}
+    helm repo add gitea-charts https://dl.gitea.com/charts/
+    helm repo update
 
-- name: Add GitLab Helm repo
-  ansible.builtin.shell: helm repo add gitlab https://charts.gitlab.io || true
-
-- name: Update Helm repo
-  ansible.builtin.shell: helm repo update
-  ignore_errors: true
-
-- name: Install GitLab (minimal, NodePort)
+- name: Install gitea via helm
   ansible.builtin.shell: |
-    helm upgrade --install gitlab gitlab/gitlab \
-      -n gitlab \
-      --set global.hosts.domain=example.com \
-      --set global.hosts.externalIP=127.0.0.1 \
-      --set global.ingress.enabled=false \
-      --set global.ingress.configureCertmanager=false \
-      --set installCertmanager=false \
-      --set certmanager-issuer.email=dummy@example.com \
-      --set global.initialRootPassword.secret=gitlab-root-password \
-      --set global.initialRootPassword.key=password \
-      --timeout 20m
+    helm upgrade --install gitea gitea-charts/gitea \
+      --namespace gitlab \
+      --set gitea.admin.username={{ gitea_admin_user }} \
+      --set gitea.admin.password={{ gitea_admin_password }} \
+      --set gitea.admin.email=gitea@local.dev \
+      --set service.http.type=ClusterIP \
+      --set service.http.port=3000 \
+      --set persistence.enabled=false \
+      --wait --timeout=180s
 
-- name: Apply GitLab NodePort Service
+- name: Apply NodePort services
   ansible.builtin.shell: kubectl apply -f {{ role_path }}/tmp/services.yml
 
+- name: Wait for Gitea pod to be ready
+  ansible.builtin.shell: |
+    kubectl wait --for=condition=Ready pod \
+      -l app.kubernetes.io/name=gitea \
+      -n gitlab \
+      --timeout=120s
+
+- name: Create wil-app repository in Gitea
+  ansible.builtin.uri:
+    url: "http://localhost:{{ gitea_node_port }}/api/v1/user/repos"
+    method: POST
+    user: "{{ gitea_admin_user }}"
+    password: "{{ gitea_admin_password }}"
+    force_basic_auth: true
+    body_format: json
+    body:
+      name: wil-app
+      private: false
+      auto_init: true
+      default_branch: main
+    status_code: [201, 409]
+
+- name: Create ArgoCD repo secret for Gitea
+  ansible.builtin.shell: |
+    kubectl -n argocd create secret generic gitea-repo \
+      --from-literal=url=http://gitea-http.gitea.svc.cluster.local:3000/{{ gitea_admin_user }}/wil-app.git \
+      --from-literal=username={{ gitea_admin_user }} \
+      --from-literal=password={{ gitea_admin_password }} \
+      --from-literal=type=git \
+      --dry-run=client -o yaml \
+    | kubectl annotate --local -f - argocd.argoproj.io/secret-type=repository -o yaml \
+    | kubectl apply -f -
 
 - name: Install ArgoCD
   ansible.builtin.shell: kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+- name: Wait for ArgoCD to be ready
+  ansible.builtin.shell: |
+    kubectl wait --for=condition=Ready pod \
+      -l app.kubernetes.io/name=argocd-server \
+      -n argocd \
+      --timeout=180s
 
 - name: Install bcrypt
   ansible.builtin.pip:
@@ -75,14 +104,20 @@
       -p '{"stringData": {"admin.password": "{{ password_hash.stdout }}", "admin.passwordMtime": "'$(date +%FT%T%Z)'"}}'
   no_log: true
 
-- name: Create gitLab repo secret for argocd
-  ansible.builtin.shell: |
-    kubectl -n argocd create secret generic gitlab-repo \
-      --from-literal=url=http://gitlab-webservice-default.gitlab.svc.cluster.local/root/wil-app.git \
-      --from-literal=username=root \
-      --from-literal=password={{ gitlab_root_password }} \
-      --from-literal=type=git \
-      --dry-run=client -o yaml | kubectl apply -f -
-
 - name: Create ArgoCD Application
   ansible.builtin.shell: kubectl apply -f {{ role_path }}/tmp/argocd_config.yml
+
+- name: Push wil-app.yml to Gitea
+  ansible.builtin.shell: |
+    rm -rf /tmp/wil-app-repo
+    mkdir -p /tmp/wil-app-repo
+    cd /tmp/wil-app-repo
+    git init
+    git checkout -b main
+    git config user.email "gitea@local.dev"
+    git config user.name "gitea"
+    cp {{ role_path }}/files/wil-app.yml .
+    git add wil-app.yml
+    git commit -m "initial wil-app deployment"
+    git remote add origin http://{{ gitea_admin_user }}:{{ gitea_admin_password }}@localhost:{{ gitea_node_port }}/{{ gitea_admin_user }}/wil-app.git
+    git push -u origin main
