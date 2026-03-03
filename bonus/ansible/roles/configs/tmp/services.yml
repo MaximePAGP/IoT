@@ -36,6 +36,6 @@ spec:
   selector:
     app: wil-app
   ports:
-    - port: 80
-      targetPort: 80
+    - port: 8888
+      targetPort: 8888
       nodePort: 30090
