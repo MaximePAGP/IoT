@@ -36,9 +36,7 @@
       --set gitea.admin.password={{ gitea_admin_password }} \
       --set gitea.admin.email=gitea@local.dev \
       --set service.http.type=ClusterIP \
-      --set service.http.port=3000 \
-      --set persistence.enabled=false \
-      --wait --timeout=180s
+      --wait --timeout=300s
 
 - name: Apply NodePort services
   ansible.builtin.shell: kubectl apply -f {{ role_path }}/tmp/services.yml
@@ -49,10 +47,11 @@
       -l app.kubernetes.io/name=gitea \
       -n gitlab \
       --timeout=120s
+  become: true
 
 - name: Create wil-app repository in Gitea
   ansible.builtin.uri:
-    url: "http://localhost:{{ gitea_node_port }}/api/v1/user/repos"
+    url: "http://localhost:8081/api/v1/user/repos"
     method: POST
     user: "{{ gitea_admin_user }}"
     password: "{{ gitea_admin_password }}"
@@ -68,7 +67,7 @@
 - name: Create ArgoCD repo secret for Gitea
   ansible.builtin.shell: |
     kubectl -n argocd create secret generic gitea-repo \
-      --from-literal=url=http://gitea-http.gitea.svc.cluster.local:3000/{{ gitea_admin_user }}/wil-app.git \
+      --from-literal=url=http://gitea-http.gitlab.svc.cluster.local:8081/{{ gitea_admin_user }}/wil-app.git \
       --from-literal=username={{ gitea_admin_user }} \
       --from-literal=password={{ gitea_admin_password }} \
       --from-literal=type=git \
@@ -119,5 +118,5 @@
     cp {{ role_path }}/files/wil-app.yml .
     git add wil-app.yml
     git commit -m "initial wil-app deployment"
-    git remote add origin http://{{ gitea_admin_user }}:{{ gitea_admin_password }}@localhost:{{ gitea_node_port }}/{{ gitea_admin_user }}/wil-app.git
-    git push -u origin main
+    git remote add origin http://{{ gitea_admin_user }}:{{ gitea_admin_password }}@localhost:8081/{{ gitea_admin_user }}/wil-app.git
+    git push -u origin main --force

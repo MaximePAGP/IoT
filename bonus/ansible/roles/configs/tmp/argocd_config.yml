@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: 'http://gitea-http.gitea.svc.cluster.local:3000/admin/wil-app.git'
+    repoURL: 'http://gitea-http.gitlab.svc.cluster.local:3000/admin/wil-app.git'
     targetRevision: main
     path: .
   destination:

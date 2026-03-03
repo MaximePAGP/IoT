@@ -1,7 +1,7 @@
 apiVersion: k3d.io/v1alpha5
 kind: Simple
 metadata:
-  name: p3
+  name: "p3"
 servers: 1
 agents: 1
 image: docker.io/rancher/k3s:v1.31.5-k3s1
@@ -9,6 +9,6 @@ ports:
   - port: 8080:30082
     nodeFilters:
       - loadbalancer
-  - port: 30081:30081
+  - port: 8081:30081
     nodeFilters:
       - loadbalancer
