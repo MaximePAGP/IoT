@@ -1,5 +1,11 @@
+- name: Generate alias config file
+  ansible.builtin.template:
+    dest: "/home/{{ ansible_user }}/.bashrc"
+    src: "bashrc.j2"
+    mode: "0700"
+
 - name: "Update apt"
-  become: yes
+  become: true
   apt:
     update_cache: yes
 
@@ -7,14 +13,12 @@
   apt:
     update_cache: yes
     name:
-      - htop
-      - git
       - net-tools
       - curl
     state: present
 
 - name: "Clean cache"
-  become: yes
+  become: true
   apt:
     autoclean: yes
     autoremove: yes
