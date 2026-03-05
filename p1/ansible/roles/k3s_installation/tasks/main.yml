@@ -1,5 +1,5 @@
 - name: Install K3s server
-  shell: curl -sfL https://get.k3s.io | sh -s - server --node-ip=192.168.56.110 --advertise-address=192.168.56.110 --tls-san=192.168.56.110
+  shell: curl -sfL https://get.k3s.io | sh -s - server --node-ip={{ ansible_host }} --advertise-address={{ ansible_host }} --tls-san={{ ansible_host }}
   when: k3s_is_server
 
 - name: Wait for K3s API
@@ -22,13 +22,13 @@
   when: k3s_is_server
 
 - name: Save token to local file
-  local_action:
-    module: copy
+  ansible.builtin.copy:
     content: "{{ server_token.stdout }}"
     dest: "/tmp/k3s_token.txt"
     mode: "0700"
   become: false
   when: k3s_is_server
+  delegate_to: localhost
 
 - name: Read token from local file
   set_fact:

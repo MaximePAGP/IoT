@@ -1,22 +1,22 @@
 - name: Setup SSH keys
   hosts: all
-  become: yes
+  become: true
   tasks:
     - name: Add host SSH public key to vagrant user
       ansible.posix.authorized_key:
         user: vagrant
         state: present
-        key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_rsa.pub') }}"
+        key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_ed25519.pub') }}"
 
 - name: Install common dependencies
   hosts: all
-  become: yes
+  become: true
   roles:
     - common
 
 
 - name: Install K3s
   hosts: all
-  become: yes
+  become: true
   roles:
     - k3s_installation

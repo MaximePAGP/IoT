@@ -8,8 +8,8 @@
 Vagrant.configure("2") do |config|
   
     NODES = [
-     { :hostname => "magrondiS", :ip => "192.168.56.110", :cpu => 1, :memory => 2048, :box => "hashicorp/bionic64", },
-     { :hostname => "magrondiSW", :ip => "192.168.56.111", :cpu => 1, :memory => 2048, :box => "hashicorp/bionic64", }
+     { :hostname => "magrondiS", :ip => "192.168.56.110", :cpu => 1, :memory => 2048, :box => "ubuntu/jammy64", },
+     { :hostname => "magrondiSW", :ip => "192.168.56.111", :cpu => 1, :memory => 2048, :box => "ubuntu/jammy64", }
     ]
 
     NODES.each do |node|
