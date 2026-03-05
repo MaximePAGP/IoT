@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # ==============================================================================
-# Inception of Things - Part 3: K3d and Argo CD
 # Script to install Docker, K3d, Kubectl and setup the cluster
 # ==============================================================================
 
@@ -11,7 +10,7 @@ sudo apt-get install -y curl git docker.io
 
 echo "Configuring Docker..."
 sudo systemctl enable --now docker
-sudo usermod -aG docker $USER
+sudo usermod -aG docker $USER  # according rights to user => sudi is not longer required
 
 echo "Installing K3d..."
 curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
@@ -30,7 +29,7 @@ sudo k3d cluster create iot-cluster --port "8888:8888@loadbalancer" --port "8080
 
 # Copy the kubeconfig so the standard user can use kubectl without sudo
 mkdir -p ~/.kube
-sudo k3d kubeconfig get iot-cluster > ~/.kube/config
+sudo k3d kubeconfig get iot-cluster > ~/.kube/config  # generate config file (API server address, certificates, and tokens needed to authenticate)
 sudo chown $USER:$USER ~/.kube/config
 
 echo "Creating namespaces (argocd and dev)..."
