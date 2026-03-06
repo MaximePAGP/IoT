@@ -16,7 +16,7 @@ reload:
 	vagrant reload
 
 fclean:
-	vagrant destroy -f
+	k3d cluster delete -a
 
 
 .PHONY: up re stop reload fcleean ansible

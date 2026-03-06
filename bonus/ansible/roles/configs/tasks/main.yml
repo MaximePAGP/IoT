@@ -9,6 +9,7 @@
 
 - name: Delete old cluster
   ansible.builtin.shell: k3d cluster delete {{ k3d_cluster_name }} || true
+  ignore_errors: true
 
 - name: Create cluster
   ansible.builtin.shell: k3d cluster create {{ k3d_cluster_name }} -c {{ role_path }}/tmp/cluster.yml
@@ -46,7 +47,7 @@
     kubectl wait --for=condition=Ready pod \
       -l app.kubernetes.io/name=gitea \
       -n gitlab \
-      --timeout=120s
+      --timeout=180s
   become: true
 
 - name: Create wil-app repository in Gitea
