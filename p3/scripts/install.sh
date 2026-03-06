@@ -55,8 +55,7 @@ echo "ArgoCD User : admin"
 echo "ArgoCD Password : $ARGOPWD"
 echo ""
 echo "Access :"
-echo "   1. run : kubectl port-forward svc/argocd-server -n argocd 8443:443 &"
-echo "      Go to : https://localhost:8443"
+echo "   Go to : https://localhost:8443"
 echo "======================================================================="
 
  kubectl port-forward svc/argocd-server -n argocd 8443:443 &>/dev/null
