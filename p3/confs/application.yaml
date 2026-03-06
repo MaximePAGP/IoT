@@ -1,7 +1,4 @@
-# ==============================================================================
-# Argo CD Application Configuration
-# This links the Kubernetes cluster to the public GitHub repository
-# ==============================================================================
+# p3/confs/application.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -12,10 +9,10 @@ spec:
   source:
     repoURL: 'https://github.com/maxenceguy/mguy-iot-app-confs.git'
     targetRevision: HEAD
-    path: '.' # We will put the app yaml files at the root of the public repo
+    path: '.'
   destination:
     server: 'https://kubernetes.default.svc'
-    namespace: dev # The app must be deployed in the dev namespace
+    namespace: dev
   syncPolicy:
     automated:
       prune: true
