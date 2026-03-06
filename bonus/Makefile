@@ -1,5 +1,5 @@
 up:
-	vagrant up
+	ansible-playbook -i ./ansible/inventory.ini ./ansible/playbook.yml
 
 # 	source ./.venv/bin/activate
 ansible:
