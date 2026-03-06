@@ -33,7 +33,7 @@ kubectl create namespace argocd
 kubectl create namespace dev
 
 echo "Installing Argo CD..."
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
 echo "Waiting for Argo CD CRDs to initialize (15s)..."
 sleep 15
@@ -56,5 +56,7 @@ echo "ArgoCD Password : $ARGOPWD"
 echo ""
 echo "Access :"
 echo "   1. run : kubectl port-forward svc/argocd-server -n argocd 8443:443 &"
-echo "   2. Go to : https://localhost:8443"
+echo "      Go to : https://localhost:8443"
 echo "======================================================================="
+
+ kubectl port-forward svc/argocd-server -n argocd 8443:443 &>/dev/null
