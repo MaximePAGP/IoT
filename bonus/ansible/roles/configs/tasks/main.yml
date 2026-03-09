@@ -29,6 +29,15 @@
     helm repo add gitea-charts https://dl.gitea.com/charts/
     helm repo update
 
+- name: Create dockerhub pull secret
+  ansible.builtin.shell: |
+    kubectl create secret docker-registry dockerhub-secret \
+      --namespace gitlab \
+      --docker-username={{ docker_username  }} \
+      --docker-password={{ docker_password }} \
+      --docker-email={{  docker_email }} \
+      --dry-run=client -o yaml | kubectl apply -f -
+
 - name: Install gitea via helm
   ansible.builtin.shell: |
     helm upgrade --install gitea gitea-charts/gitea \
@@ -37,6 +46,9 @@
       --set gitea.admin.password={{ gitea_admin_password }} \
       --set gitea.admin.email=gitea@local.dev \
       --set service.http.type=ClusterIP \
+      --set postgresql-ha.enabled=false \
+      --set postgresql.enabled=true \
+      --set global.imagePullSecrets[0]=dockerhub-secret \
       --wait --timeout=300s
 
 - name: Apply NodePort services
@@ -90,7 +102,9 @@
   ansible.builtin.pip:
     name: bcrypt
     state: present
-  become: true
+    extra_args: "--break-system-packages"
+  become: false
+  delegate_to: localhost
 
 - name: Hash ArgoCD password
   ansible.builtin.shell: >
