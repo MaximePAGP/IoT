@@ -39,7 +39,7 @@ echo "Waiting for Argo CD CRDs to initialize (15s)..."
 sleep 15
 
 echo "Linking Argo CD to GitHub repository..."
-kubectl apply -f ../confs/application.yaml
+kubectl apply -f $(pwd)/confs/application.yaml
 
 echo "Waiting for Argo CD Secret to be generated (10s)..."
 sleep 10
