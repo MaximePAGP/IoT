@@ -1,7 +1,7 @@
 Vagrant.configure("2") do |config|
 
     NODES = [
-     { :hostname => "fsulvacS", :ip => "192.168.56.110", :cpu => 1, :memory => 2048, :box => "bento/ubuntu-24.04"},
+     { :hostname => "fsulvacS", :name => "fsulvac", :ip => "192.168.56.110", :cpu => 1, :memory => 2048, :box => "bento/ubuntu-24.04"},
     ]
 
     NODES.each do |node|
@@ -10,6 +10,7 @@ Vagrant.configure("2") do |config|
             server.vm.box = node[:box]
             server.vm.network "private_network", ip: node[:ip]
             server.vm.provider "virtualbox" do |vb|
+                vb.name = node[:name]
                 vb.memory = node[:memory]
                 vb.cpus = node[:cpu]
             end
